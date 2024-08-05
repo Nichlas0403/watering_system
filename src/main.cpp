@@ -4,8 +4,10 @@
 #include <ESP8266WebServer.h>
 #include <ArduinoJson.h>
 #include "FlashService.h"
+#include "SmarthomeService.h"
 
 #define soilSensorInput A0
+#define soilSensorOutput D6
 #define pumpOutput D5
 
 //WIFI varibles
@@ -19,18 +21,22 @@ const String _wifiPasswordFlash = "_wifiPassword";
 //Services
 ESP8266WebServer _server(80);
 FlashService _flashService;
+SmarthomeService _smarthomeService;
 
-//Core services
+//Core variables
 unsigned long _currentMillis;
 unsigned long _wateringTimeEnd;
 unsigned int _wateringTime;
 bool _isWatering;
+unsigned long _wakeupTime;
+bool _smartHomeNotified;
 
 void connectToWiFi();
 
 void setup() {
   Serial.begin(11520);
   pinMode(soilSensorInput, INPUT);
+  pinMode(soilSensorOutput, OUTPUT);
   pinMode(pumpOutput, OUTPUT);
 
   _wifiName = _flashService.ReadFromFlash(_wifiNameFlash);
@@ -38,6 +44,7 @@ void setup() {
 
   connectToWiFi(); 
 
+  _wakeupTime = millis();
 }
 
 void loop() {
@@ -45,6 +52,12 @@ void loop() {
   _server.handleClient();
 
   _currentMillis = millis();
+
+  if(!_smartHomeNotified)
+  {
+    Serial.println(_flashService.ReadFromFlash("smarthomeBearerTokenFlash"));
+    _smartHomeNotified = true;
+  }
 
   if(_currentMillis < _wateringTimeEnd && !_isWatering)
   {
@@ -56,6 +69,12 @@ void loop() {
     _isWatering = false;
     digitalWrite(pumpOutput, LOW);
   }
+
+  // if(_currentMillis - _wakeupTime > 60000) //allows it to be awake for 1 minut
+  // {
+  //   Serial.print("SLEEEEEP");
+  //   ESP.deepSleep(3600e6); //60 minutes
+  // }
   
 }
 
@@ -114,7 +133,11 @@ void healthCheck()
 
 void getSoilReading()
 {
+  digitalWrite(soilSensorOutput, HIGH);
+  delay(125); //Delay so the HIGH voltage can be send from the GPIO before the sensors starts reading
   int soilMoistureValue = analogRead(soilSensorInput);
+  digitalWrite(soilSensorOutput, LOW);
+
   String jsonResponse = "{\"reading\":" + String(soilMoistureValue) + "}";
   _server.send(200, "text/json", jsonResponse);
 }
@@ -192,4 +215,4 @@ void connectToWiFi()
 }
 
 
-//192.168.1.132
+//192.168.1.40
