@@ -55,7 +55,6 @@ void loop() {
 
   if(!_smartHomeNotified)
   {
-    Serial.println(_flashService.ReadFromFlash("smarthomeBearerTokenFlash"));
     _smartHomeNotified = true;
   }
 
