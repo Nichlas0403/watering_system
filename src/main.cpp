@@ -53,8 +53,9 @@ void loop() {
 
   _currentMillis = millis();
 
-  if(!_smartHomeNotified)
+  if(!_smartHomeNotified) 
   {
+    _smarthomeService.UpdateIsOnline();
     _smartHomeNotified = true;
   }
 
@@ -69,11 +70,12 @@ void loop() {
     digitalWrite(pumpOutput, LOW);
   }
 
-  // if(_currentMillis - _wakeupTime > 60000) //allows it to be awake for 1 minut
-  // {
-  //   Serial.print("SLEEEEEP");
-  //   ESP.deepSleep(3600e6); //60 minutes
-  // }
+  if(_currentMillis - _wakeupTime > 60000) //allows it to be awake for 60 seconds
+  {
+    _smarthomeService.UpdateIsOffline();
+    ESP.deepSleep(3600e6); //60 minutes
+    // ESP.deepSleep(10e6); //60 seconds for testing
+  }
   
 }
 
@@ -134,10 +136,20 @@ void getSoilReading()
 {
   digitalWrite(soilSensorOutput, HIGH);
   delay(125); //Delay so the HIGH voltage can be send from the GPIO before the sensors starts reading
-  int soilMoistureValue = analogRead(soilSensorInput);
+
+  int value = analogRead(soilSensorInput);
+
   digitalWrite(soilSensorOutput, LOW);
 
-  String jsonResponse = "{\"reading\":" + String(soilMoistureValue) + "}";
+  String jsonResponse = "{\"reading\":" + String(value) + "}";
+  _server.send(200, "text/json", jsonResponse);
+}
+
+void getBatteryLevel()
+{
+  int batteryLevel = ESP.getVcc();
+
+  String jsonResponse = "{\"batteryLevel\":" + String(batteryLevel) + "}";
   _server.send(200, "text/json", jsonResponse);
 }
 
@@ -147,6 +159,7 @@ void restServerRouting()
   _server.on(F("/water"), HTTP_POST, Water);
   _server.on(F("/health"), HTTP_GET, healthCheck);
   _server.on(F("/soil-reading"), HTTP_GET, getSoilReading);
+  _server.on(F("/battery-level"), HTTP_GET, getBatteryLevel);
 }
 
 void handleNotFound() 

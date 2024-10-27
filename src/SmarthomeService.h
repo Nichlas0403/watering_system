@@ -17,7 +17,8 @@ class SmarthomeService
 
     public:
         SmarthomeService();
-        void UpdateSmarthome(int soilReading);
+        void UpdateIsOnline();
+        void UpdateIsOffline();
 };
 
 #endif
