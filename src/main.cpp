@@ -6,6 +6,8 @@
 #include "FlashService.h"
 #include "SmarthomeService.h"
 
+// ADC_MODE(ADC_VCC)
+
 #define soilSensorInput A0
 #define soilSensorOutput D6
 #define pumpOutput D5
@@ -35,6 +37,7 @@ void connectToWiFi();
 
 void setup() {
   Serial.begin(11520);
+
   pinMode(soilSensorInput, INPUT);
   pinMode(soilSensorOutput, OUTPUT);
   pinMode(pumpOutput, OUTPUT);
@@ -43,6 +46,7 @@ void setup() {
   _wifiPassword = _flashService.ReadFromFlash(_wifiPasswordFlash);
 
   connectToWiFi(); 
+  _smarthomeService.UpdateIpAddress(WiFi.localIP().toString());
 
   _wakeupTime = millis();
 }
@@ -74,7 +78,7 @@ void loop() {
   {
     _smarthomeService.UpdateIsOffline();
     ESP.deepSleep(3600e6); //60 minutes
-    // ESP.deepSleep(10e6); //60 seconds for testing
+    // ESP.deepSleep(10e1); //10 seconds for testing
   }
   
 }

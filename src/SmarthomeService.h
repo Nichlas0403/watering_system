@@ -19,6 +19,7 @@ class SmarthomeService
         SmarthomeService();
         void UpdateIsOnline();
         void UpdateIsOffline();
+        void UpdateIpAddress(String ipAddress);
 };
 
 #endif
