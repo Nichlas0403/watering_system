@@ -12,9 +12,9 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug",
-            "executable": "C:/Users/Nichl/OneDrive/Skrivebord/Tinkering/repositories/watering_system/.pio/build/d1_mini/firmware.elf",
-            "projectEnvName": "d1_mini",
-            "toolchainBinDir": "C:/Users/Nichl/.platformio/packages/toolchain-xtensa/bin",
+            "executable": "/home/nichlas/Desktop/software/Repositories/watering_system/.pio/build/esp8266/firmware.elf",
+            "projectEnvName": "esp8266",
+            "toolchainBinDir": "/home/nichlas/.platformio/packages/toolchain-xtensa/bin",
             "internalConsoleOptions": "openOnSessionStart",
             "preLaunchTask": {
                 "type": "PlatformIO",
@@ -25,18 +25,18 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (skip Pre-Debug)",
-            "executable": "C:/Users/Nichl/OneDrive/Skrivebord/Tinkering/repositories/watering_system/.pio/build/d1_mini/firmware.elf",
-            "projectEnvName": "d1_mini",
-            "toolchainBinDir": "C:/Users/Nichl/.platformio/packages/toolchain-xtensa/bin",
+            "executable": "/home/nichlas/Desktop/software/Repositories/watering_system/.pio/build/esp8266/firmware.elf",
+            "projectEnvName": "esp8266",
+            "toolchainBinDir": "/home/nichlas/.platformio/packages/toolchain-xtensa/bin",
             "internalConsoleOptions": "openOnSessionStart"
         },
         {
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (without uploading)",
-            "executable": "C:/Users/Nichl/OneDrive/Skrivebord/Tinkering/repositories/watering_system/.pio/build/d1_mini/firmware.elf",
-            "projectEnvName": "d1_mini",
-            "toolchainBinDir": "C:/Users/Nichl/.platformio/packages/toolchain-xtensa/bin",
+            "executable": "/home/nichlas/Desktop/software/Repositories/watering_system/.pio/build/esp8266/firmware.elf",
+            "projectEnvName": "esp8266",
+            "toolchainBinDir": "/home/nichlas/.platformio/packages/toolchain-xtensa/bin",
             "internalConsoleOptions": "openOnSessionStart",
             "loadMode": "manual"
         }

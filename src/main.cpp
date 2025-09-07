@@ -3,66 +3,92 @@
 #include <ESP8266mDNS.h>
 #include <ESP8266WebServer.h>
 #include <ArduinoJson.h>
-#include "FlashService.h"
 #include "SmarthomeService.h"
 
-// ADC_MODE(ADC_VCC)
-
-#define soilSensorInput A0
-#define soilSensorOutput D6
-#define pumpOutput D5
+#define soilSensorInput A0 //han hun
+#define soilSensorOutput D2 //d1 //han hun
+#define pumpOutput D1 //d2 //han hun
 
 //WIFI varibles
-String _wifiName = "";
-String _wifiPassword = "";
-
-//Flash addresses
-const String _wifiNameFlash = "_wifiName";
-const String _wifiPasswordFlash = "_wifiPassword";
+String _wifiName = "ssid";
+String _wifiPassword = "password";
 
 //Services
 ESP8266WebServer _server(80);
-FlashService _flashService;
 SmarthomeService _smarthomeService;
 
 //Core variables
+unsigned long previousMillis = 0;
+const long interval = 10000; // Check every 10 seconds
+bool smarthomeUpdated = false;
+
 unsigned long _currentMillis;
 unsigned long _wateringTimeEnd;
 unsigned int _wateringTime;
 bool _isWatering;
-unsigned long _wakeupTime;
-bool _smartHomeNotified;
+
 
 void connectToWiFi();
 
 void setup() {
-  Serial.begin(11520);
+  Serial.begin(9600);
 
   pinMode(soilSensorInput, INPUT);
   pinMode(soilSensorOutput, OUTPUT);
   pinMode(pumpOutput, OUTPUT);
 
-  _wifiName = _flashService.ReadFromFlash(_wifiNameFlash);
-  _wifiPassword = _flashService.ReadFromFlash(_wifiPasswordFlash);
-
   connectToWiFi(); 
   _smarthomeService.UpdateIpAddress(WiFi.localIP().toString());
-
-  _wakeupTime = millis();
 }
 
 void loop() {
 
   _server.handleClient();
-
   _currentMillis = millis();
 
-  if(!_smartHomeNotified) 
+  
+  if(!smarthomeUpdated)
   {
-    _smarthomeService.UpdateIsOnline();
-    _smartHomeNotified = true;
+    smarthomeUpdated = _smarthomeService.UpdateIpAddress(WiFi.localIP().toString());
   }
 
+  // Check Wi-Fi status periodically
+  if ((_currentMillis - previousMillis >= interval) && WiFi.status() != WL_CONNECTED) 
+  {
+    smarthomeUpdated = false;
+
+    Serial.println("WiFi disconnected, attempting to reconnect...");
+    previousMillis = _currentMillis;  // Reset the timer
+
+    // Only attempt to reconnect if not already reconnecting
+    if (!WiFi.isConnected()) 
+    {
+      WiFi.reconnect(); // Let the ESP32 handle reconnection automatically
+      
+      // Wait until connected, with a timeout
+      unsigned long startAttemptTime = millis();
+      while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 10000) 
+      {
+        delay(500); // Small delay to allow for network stability
+        Serial.println("Waiting for WiFi to reconnect...");
+      }
+    }
+
+    // Check if reconnection was successful
+    if (WiFi.status() == WL_CONNECTED) 
+    {
+      Serial.println("Reconnected to WiFi successfully!");
+    } 
+    else 
+    {
+      Serial.println("Failed to reconnect to WiFi.");
+    }
+  }
+
+
+
+
+  //Watering logic
   if(_currentMillis < _wateringTimeEnd && !_isWatering)
   {
     _isWatering = true;
@@ -73,14 +99,6 @@ void loop() {
     _isWatering = false;
     digitalWrite(pumpOutput, LOW);
   }
-
-  if(_currentMillis - _wakeupTime > 60000) //allows it to be awake for 60 seconds
-  {
-    _smarthomeService.UpdateIsOffline();
-    ESP.deepSleep(3600e6); //60 minutes
-    // ESP.deepSleep(10e1); //10 seconds for testing
-  }
-  
 }
 
 // ------------------- API -----------------------  
@@ -149,21 +167,12 @@ void getSoilReading()
   _server.send(200, "text/json", jsonResponse);
 }
 
-void getBatteryLevel()
-{
-  int batteryLevel = ESP.getVcc();
-
-  String jsonResponse = "{\"batteryLevel\":" + String(batteryLevel) + "}";
-  _server.send(200, "text/json", jsonResponse);
-}
-
 // Core server functionality
 void restServerRouting() 
 {
   _server.on(F("/water"), HTTP_POST, Water);
   _server.on(F("/health"), HTTP_GET, healthCheck);
   _server.on(F("/soil-reading"), HTTP_GET, getSoilReading);
-  _server.on(F("/battery-level"), HTTP_GET, getBatteryLevel);
 }
 
 void handleNotFound() 
